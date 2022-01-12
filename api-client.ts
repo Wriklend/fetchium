@@ -118,14 +118,6 @@ type Test = {
 }
 
 const apiClient = {
-  auth({login, password}): Test {
-    return api.post(`http://192.168.1.166:8080/user/login`, {
-      params: {
-        login,
-        password
-      }
-    })
-  }
 };
 
 export default apiClient;
