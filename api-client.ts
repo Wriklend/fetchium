@@ -127,8 +127,7 @@ class Fetchium {
     url: string,
     method: HttpMethod,
     options?: FetchiumRequestOptions
-  ): Promise<T | void> {
-    try {
+  ): Promise<T> {
       const config = this.requestInterposers(options);
       const completeUrl = this.buildUrl(url, config?.params);
 
@@ -139,26 +138,25 @@ class Fetchium {
         ...(config ? getExtractedRequestInit(config) : null)
       });
 
-      const response = await fetch(request);
-
-      return this.response<T>(response);
-    } catch (e) {
-      console.log(e);
-    }
+      return fetch(request)
+      .then((res) => {
+        return this.response<T>(res);
+      })
+      .catch((err) => {
+        throw err;
+      })
   }
 
-  private async response<T>(response: Response): Promise<T | void> {
-    try {
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
+  private async response<T>(response: Response): Promise<T> {
+      return new Promise(async (resolve, reject) => {
+        if (!response.ok) {
+          reject(response.statusText);
+        }
 
-      const data = await response.json();
+        const data = await response.json();
 
-      return this.responseInterposers(data);
-    } catch (e) {
-      console.log(e);
-    }
+        resolve(this.responseInterposers(data));
+      })
   }
 
   async get<T>(
