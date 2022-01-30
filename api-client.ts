@@ -4,69 +4,30 @@ type ResponseWithData = Response & {
   data: any;
 };
 
-const RequestInitKeys: Array<keyof RequestInit> = [
-  "cache",
-  "credentials",
-  "integrity",
-  "keepalive",
-  "mode",
-  "redirect",
-  "referrer",
-  "referrerPolicy",
-  "signal",
-  "window"
-];
-// "body",
-
-// "headers",
-
-// "method",
-
-const getExtractedRequestInit = (options: any): RequestInit =>
-  RequestInitKeys.reduce((requestInitObject: RequestInit, currentKey: string) => {
-    if (options.hasOwnProperty(currentKey)) {
-      requestInitObject[currentKey] = options[currentKey];
-    }
-
-    return requestInitObject;
-  }, {});
-
 export enum HttpMethod {
   get = "GET",
   post = "POST"
 }
 
-export interface RequestBody {
-  [key: string]: any;
-}
-
-export interface Headers {
-  [key: string]: string;
-}
-
-export interface QueryStringParams {
-  [key: string]: any;
-}
-
 interface DefaultOptions {
-  baseUrl?: string | null;
+  baseUrl?: URL;
   headers?: Headers;
 }
 
 type FetchiumRequestOptions = Omit<RequestInit, "method" | "body"> & {
-  params?: QueryStringParams;
+  params?: URLSearchParams;
   data?: any;
 };
 
-const defaultHeaders = {
+const defaultHeaders = new Headers({
   "Content-Type": "application/json; charset=UTF-8",
-  Accept: "application/json"
-};
+  "Accept": "application/json"
+});
 
 const isAbsoluteURL = (url: string) => /^[a-z][a-z0-9+.-]*:/.test(url);
 
-const combineUrls = (basePath: string, relativePath: string) =>
-  `${basePath.replace(/\/+$/, "")}/${relativePath.replace(/^\//, "")}`;
+const combineUrls = (basePath: URL, relativePath: string) =>
+  `${basePath.toString().replace(/\/+$/, "")}/${relativePath.replace(/^\//, "")}`;
 
 export default function compose<T>(...funcs: any[]): T {
   if (funcs.length === 1) {
@@ -86,7 +47,7 @@ class Fetchium {
   private responseInterposers: InterposeFunction<any, any> = () => {};
 
   constructor(baseUrl?: string, headers: Headers = defaultHeaders) {
-    this.defaultOptions.baseUrl = baseUrl ?? null;
+    this.defaultOptions.baseUrl = new URL(baseUrl);
     this.defaultOptions.headers = headers;
   }
 
@@ -135,7 +96,7 @@ class Fetchium {
         method: method,
         headers: config?.headers ?? this.defaultOptions.headers,
         ...(config?.data ? { body: JSON.stringify(config.data) } : null),
-        ...(config ? getExtractedRequestInit(config) : null)
+        ...(config)
       });
 
       return fetch(request)
