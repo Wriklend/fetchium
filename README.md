@@ -1,3 +1,5 @@
-# fetchium
+# Fetchium
 
-## Клиент вокруг fetch API для удобных запросов к беку
+## API Client
+
+### The environment around the fetch API. Examples will come later
